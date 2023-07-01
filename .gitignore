@@ -1,0 +1,11 @@
+# Eclipse
+.project
+.classpath
+.metadata
+.recommenders
+RemoteSystemsTempFiles
+.settings/
+bin/
+
+# SVN
+.svn
