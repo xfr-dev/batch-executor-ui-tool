@@ -1,6 +1,6 @@
 tabs {
 	tab1 {
-	    name = 'Tab #1' 
+		name = 'Tab #1'
 		groups{
 			group1 {
 				name = 'Group #1'
@@ -13,6 +13,22 @@ tabs {
 				task2 {
 					name='Task #2'
 					commandLine = 'cmd /C ECHO Hello World 12'
+				}
+				task3 {
+					name='Task #3'
+					commandLine = 'cmd /C ECHO Hello World 13'
+				}
+				task4 {
+					name='Task #4'
+					commandLine = 'cmd /C ECHO Hello World 14'
+				}
+				task5 {
+					name='Task #5'
+					commandLine = 'cmd /C ECHO Hello World 5'
+				}
+				task6 {
+					name='Task #6'
+					commandLine = 'cmd /C ECHO Hello World 6'
 				}
 			}
 			group2 {
@@ -45,7 +61,7 @@ tabs {
 		}
 	}
 	tab2 {
-	    name = 'Tab #2' 
+		name = 'Tab #2'
 		groups{
 			group1 {
 				name = 'Group #2.1'

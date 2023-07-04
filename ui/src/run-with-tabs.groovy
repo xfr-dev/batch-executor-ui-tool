@@ -1,6 +1,6 @@
 
 
-def configPath = 'settings-with-tabs.groovy'
+def configPath = 'src/settings-with-tabs.groovy'
 if (args.length > 0 && args[0]) {
 	configPath = args[0]
 }
