@@ -1,4 +1,7 @@
+import static Task.Display
+
 import java.awt.Color
+import java.awt.Cursor
 import java.nio.charset.Charset
 
 import javax.swing.BoxLayout
@@ -8,6 +11,8 @@ import javax.swing.JPanel
 import javax.swing.SwingUtilities
 import javax.swing.WindowConstants
 import javax.swing.border.TitledBorder
+import javax.swing.event.HyperlinkEvent
+import javax.swing.event.HyperlinkListener
 
 import groovy.swing.SwingBuilder
 
@@ -64,7 +69,7 @@ class TaskExecutorMainWindow {
 
 			for(task in group.tasks) {
 
-				println "$task.name $task.commandLine"
+				println "$task.name $task.commandLine $task.url"
 			}
 		}
 	}
@@ -85,7 +90,14 @@ class TaskExecutorMainWindow {
 					fillGroups( value, group, task, level + 1, tab )
 				} else if (level == 1) {
 
-					task = new Task(name: value.get("name"), commandLine: value.get("commandLine"), outputCharset: value.get("outputCharset") ? value.get("outputCharset") : Charset.defaultCharset().name(), promptArg: value.get("promptArg"), repeatCount:  value.get("repeatCount") ? value.get("repeatCount") : 1, repeatInterval: value.get("repeatInterval") ? value.get("repeatInterval") : 5000 )
+					task = new Task(name: value.get("name"), commandLine: value.get("commandLine"),
+					outputCharset: value.get("outputCharset") ? value.get("outputCharset") : Charset.defaultCharset().name(),
+					promptArg: value.get("promptArg"),
+					repeatCount:  value.get("repeatCount") ? value.get("repeatCount") : 1,
+					repeatInterval: value.get("repeatInterval") ? value.get("repeatInterval") : 5000,
+					url: value.get("url"),
+					display: value.get("display") ? Display.valueOf(value.get("display")) : Display.CHECKBOX)
+
 					group.tasks.add(task)
 				}
 			} else {
@@ -129,12 +141,12 @@ class TaskExecutorMainWindow {
 							panel() {
 								boxLayout()
 								allComponents.add(button(text:txt('button.selectAll'),actionPerformed: {
-									selectedTab.checkboxes.each {checkbox ->
+									selectedTab.checkboxes.each { checkbox ->
 										checkbox.selected = true
 									}
 								}))
 								allComponents.add(button(text:txt('button.selectNone'),actionPerformed: {
-									selectedTab.checkboxes.each {checkbox ->
+									selectedTab.checkboxes.each { checkbox ->
 										checkbox.selected = false
 									}
 								}))
@@ -173,7 +185,30 @@ class TaskExecutorMainWindow {
 										boxLayout(axis:BoxLayout.X_AXIS)
 										//gridLayout(columns:4, rows: 2, vgap: 1, hgap: 1, alignment: GridLayout.CENTER )
 										group.tasks.each { task ->
-											checkboxes.add( checkBox(text: task.name, selected: bind(target:task, targetProperty: 'selected')) )
+
+											if (task.display == Display.CHECKBOX) {
+
+												checkboxes.add( checkBox(text: task.name, selected: bind(target:task, targetProperty: 'selected')) )
+											} else if (task.display == Display.LINK) {
+												
+												def link = label(text: task.name, foreground: Color.BLUE.darker(), cursor: Cursor.getPredefinedCursor(Cursor.HAND_CURSOR),
+												mouseClicked: {
+													java.awt.Desktop.getDesktop().browse(task.url.toURI())
+												}
+												)
+												
+												allComponents.add(link)
+
+											} else if (task.display == Display.BUTTON) {
+
+												def button = button(text: task.name, actionPerformed: { e ->
+													TasksExecutionWindow execution = new TasksExecutionWindow(this,List.of(task))
+													execution.show()
+													execution.executeTasks()
+												})
+
+												allComponents.add(button)
+											}
 										}
 									}
 									//}

@@ -40,5 +40,22 @@ groups{
 			repeatCount = 5
 		}
 	}
+	group4 {
+		name = 'Group #4 - Urls'
+		url1 {
+			name='Url (checkbox)'
+			url = 'https://www.google.be'
+		}
+		url2 {
+			name='Url (link)'
+			url = 'https://www.atlassian.com'
+			display = 'LINK'
+		}
+		url3 {
+			name='Url (Button)'
+			url = 'https://thecodinglove.com/'
+			display = 'BUTTON'
+		}
+	}
 }
 
