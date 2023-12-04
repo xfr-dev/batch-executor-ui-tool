@@ -1,6 +1,7 @@
-import groovy.swing.SwingBuilder
+import static Task.Display
 
 import java.awt.Color
+import java.awt.Cursor
 import java.nio.charset.Charset
 
 import javax.swing.BoxLayout
@@ -10,7 +11,10 @@ import javax.swing.JPanel
 import javax.swing.SwingUtilities
 import javax.swing.WindowConstants
 import javax.swing.border.TitledBorder
+import javax.swing.event.HyperlinkEvent
+import javax.swing.event.HyperlinkListener
 
+import groovy.swing.SwingBuilder
 
 
 
@@ -21,52 +25,90 @@ class TaskExecutorMainWindow {
 
 	def config
 
-	def groups = new ArrayList<Group>()
+	def tabs = new ArrayList<Tab>()
+
+	def tabbedPane
+
+	def selectedTab
 
 	def bundle = java.util.ResourceBundle.getBundle("applicationMessages", Locale.getDefault(), TaskExecutorMainWindow.class.getClassLoader())
 
 	// UI properties
-	def checkboxes = new ArrayList<>();
 
-	def components = new ArrayList<>();
+	def allComponents = new ArrayList<>()
 
 	def TaskExecutorMainWindow(config) {
 
 		this.config = config
 
-		fillGroups(config.groups)
+		if (!config.tabs) {
 
-		for(group in groups) {
-			println "$group"
-			for(task in group.tasks) {
-				println "$task.name $task.commandLine"
+			def tab = new Tab()
+			tabs.add(tab)
+			fillGroups(config.groups, null, null, 0, tab)
+			print(tab)
+		} else {
+
+			for(tabConfigEntry in config.tabs) {
+
+				def tabConfigValue = tabConfigEntry.value
+				def tab = new Tab(name: tabConfigValue.name)
+				tabs.add(tab)
+				println "Created tab : $tab"
+
+				fillGroups(tabConfigValue.groups, null, null, 0, tab)
 			}
-		}		
+		}
 	}
 
-	def fillGroups( map, group = null, task = null, level = 0 ) {
+	def printTab(tab) {
+
+		for(group in tab.groups) {
+
+			println "$group"
+
+			for(task in group.tasks) {
+
+				println "$task.name $task.commandLine $task.url"
+			}
+		}
+	}
+
+	def fillGroups( map, group = null, task = null, level = 0, tab = null ) {
+
 		map.each { key, value ->
+
 			if( value instanceof Map ) {
+
 				println "$key"
+				println "$level"
 
 				if (level == 0) {
 
 					group = new Group(name: value.get("name"))
-					groups.add(group)
-					fillGroups( value, group, task, level + 1 )
+					tab.groups.add(group)
+					fillGroups( value, group, task, level + 1, tab )
 				} else if (level == 1) {
 
-					task = new Task(name: value.get("name"), commandLine: value.get("commandLine"), outputCharset: value.get("outputCharset") ? value.get("outputCharset") : Charset.defaultCharset().name(), promptArg: value.get("promptArg"), repeatCount:  value.get("repeatCount") ? value.get("repeatCount") : 1, repeatInterval: value.get("repeatInterval") ? value.get("repeatInterval") : 5000 )
+					task = new Task(name: value.get("name"), commandLine: value.get("commandLine"),
+					outputCharset: value.get("outputCharset") ? value.get("outputCharset") : Charset.defaultCharset().name(),
+					promptArg: value.get("promptArg"),
+					repeatCount:  value.get("repeatCount") ? value.get("repeatCount") : 1,
+					repeatInterval: value.get("repeatInterval") ? value.get("repeatInterval") : 5000,
+					url: value.get("url"),
+					display: value.get("display") ? Display.valueOf(value.get("display")) : Display.CHECKBOX)
+
 					group.tasks.add(task)
 				}
-			}
-			else {
+			} else {
+
 				println "$group $task $key : $value"
 			}
 		}
 	}
 
 	def show() {
+
 		new SwingBuilder().edt {
 
 			frame(title:txt('application.title'), size: [800, 600], show:true, defaultCloseOperation:WindowConstants.EXIT_ON_CLOSE, locationRelativeTo: null) {
@@ -80,71 +122,134 @@ class TaskExecutorMainWindow {
 					}
 				}
 
-				// Global layout
-				gridLayout(columns: 1, rows: 2 + groups.size())
+				boxLayout(axis: BoxLayout.PAGE_AXIS)
+				// Tabs
+				tabbedPane = tabbedPane(id: 'tabs') {
+					//				tabbedPane(id: 'tabs', tabLayoutPolicy:JTabbedPane.SCROLL_TAB_LAYOUT) {
 
-				// Global selection buttons panel
-				panel() {
-					boxLayout();
-					components.add(button(text:txt('button.selectAll'),actionPerformed: {
-						checkboxes.each {checkbox ->
-							checkbox.selected = true
-						}
-					}))
-					components.add(button(text:txt('button.selectNone'),actionPerformed: {
-						checkboxes.each {checkbox ->
-							checkbox.selected = false
-						}
-					}))
-				}
+					for(tab in tabs) {
 
-				// Tasks groups panels
-				groups.each { group ->
-					def border = titledBorder(border: lineBorder(color: Color.black), title: group.name, titleJustification: TitledBorder.LEFT, titlePosition: TitledBorder.LEFT);
-					panel(border: border, preferredSize: [400, 600]) {
-						boxLayout(axis:BoxLayout.Y_AXIS)
-						//gridLayout(columns: 1, rows: 2, vgap: 1, hgap: 1 )
-						panel() {
-							components.add(button(text:txt('button.selectAll'),actionPerformed: {
-								def panel = findGroupPanel(it.source)
-								panel.components.each { component ->
-									if (component instanceof JCheckBox) {
-										component.selected = true
+						println "Adding tab [$tab] to tab in ui"
+						checkboxes = tab.checkboxes
+						panel( name: tab.name ) {
+
+							groups = tab.groups
+							// Global layout
+							gridLayout(columns: 1, rows: 2 + groups.size())
+
+							// Global selection buttons panel
+							panel() {
+								boxLayout()
+								allComponents.add(button(text:txt('button.selectAll'),actionPerformed: {
+									selectedTab.checkboxes.each { checkbox ->
+										checkbox.selected = true
 									}
-								}
-							}))
-							components.add(button(text:txt('button.selectNone'),actionPerformed: {
-								def panel = findGroupPanel(it.source)
-								panel.components.each { component ->
-									if (component instanceof JCheckBox) {
-										component.selected = false
+								}))
+								allComponents.add(button(text:txt('button.selectNone'),actionPerformed: {
+									selectedTab.checkboxes.each { checkbox ->
+										checkbox.selected = false
 									}
-								}
-							}))
-						}
-						panel(name: 'tasksGroupPanel') {
-							group.tasks.each { task ->
-								checkboxes.add( checkBox(text: task.name, selected: bind(target:task, targetProperty: 'selected')) )
+								}))
 							}
+
+							// Tasks groups panels
+							groups.each { group ->
+								def border = titledBorder(border: lineBorder(color: Color.black), title: group.name, titleJustification: TitledBorder.LEFT, titlePosition: TitledBorder.LEFT)
+								panel(border: border) {
+									//									panel(border: border, preferredSize: [400, 600]) {
+									boxLayout(axis:BoxLayout.Y_AXIS)
+									//gridLayout(columns: 1, rows: 2, vgap: 1, hgap: 1 )
+									panel() {
+										allComponents.add(button(text:txt('button.selectAll'),actionPerformed: {
+											def panel = findGroupPanel(it.source)
+											panel.components.each { component ->
+												if (component instanceof JCheckBox) {
+													component.selected = true
+												}
+											}
+										}))
+										allComponents.add(button(text:txt('button.selectNone'),actionPerformed: {
+											def panel = findGroupPanel(it.source)
+											panel.components.each { component ->
+												if (component instanceof JCheckBox) {
+													component.selected = false
+												}
+											}
+										}))
+									}
+
+									//scrollPane() {
+
+									panel(name: 'tasksGroupPanel') {
+
+										boxLayout(axis:BoxLayout.X_AXIS)
+										//gridLayout(columns:4, rows: 2, vgap: 1, hgap: 1, alignment: GridLayout.CENTER )
+										group.tasks.each { task ->
+
+											if (task.display == Display.CHECKBOX) {
+
+												checkboxes.add( checkBox(text: task.name, selected: bind(target:task, targetProperty: 'selected')) )
+											} else if (task.display == Display.LINK) {
+												
+												def link = label(text: task.name, foreground: Color.BLUE.darker(), cursor: Cursor.getPredefinedCursor(Cursor.HAND_CURSOR),
+												mouseClicked: {
+													java.awt.Desktop.getDesktop().browse(task.url.toURI())
+												}
+												)
+												
+												allComponents.add(link)
+
+											} else if (task.display == Display.BUTTON) {
+
+												def button = button(text: task.name, actionPerformed: { e ->
+													TasksExecutionWindow execution = new TasksExecutionWindow(this,List.of(task))
+													execution.show()
+													execution.executeTasks()
+												})
+
+												allComponents.add(button)
+											}
+										}
+									}
+									//}
+								}
+							}
+							allComponents.addAll(checkboxes)
 						}
 					}
 				}
-
-				// Execute button panel
-				panel() {
-					boxLayout();
-					components.add(button(text:txt('button.execute'),
-					actionPerformed: { doOutside { executeSelectedTasks() } }))
+				vbox{
+					// Execute button panel
+					panel(name: "Actions") {
+						boxLayout()
+						allComponents.add(button(text:txt('button.execute'),
+						actionPerformed: {
+							doOutside {
+								executeSelectedTasks()
+							}
+						}))
+					}
 				}
-
-				components.addAll(checkboxes)
 			}
+
+			tabbedPane.addChangeListener({e ->
+
+				selectedTabIndex = tabbedPane.selectedIndex
+				println("Selected tab index: $selectedTabIndex")
+
+				selectedTab = tabs.getAt(selectedTabIndex)
+				println("Selected tab is: $selectedTab")
+			})
+
+			selectedTab = tabs.getAt(0)
 		}
 	}
 
 	private executeSelectedTasks() {
 
-		def selectedTasks = new ArrayList<>();
+		def groups = selectedTab.groups
+
+		def selectedTasks = new ArrayList<>()
 
 		groups.each {group->
 			group.tasks.each {task->
@@ -163,7 +268,7 @@ class TaskExecutorMainWindow {
 		} catch(Throwable e) {
 			e.printStackTrace()
 			JOptionPane.showMessageDialog(executionWindow.frame, "Unexpected error occured while executing selected task : ${e.message}",
-					txt("tasks.execution.error.title"), JOptionPane.ERROR_MESSAGE);
+					txt("tasks.execution.error.title"), JOptionPane.ERROR_MESSAGE)
 		} finally {
 			unFreeze()
 		}
@@ -174,23 +279,23 @@ class TaskExecutorMainWindow {
 		panel = SwingUtilities.getAncestorOfClass(JPanel.class, panel)
 		for(component in panel.components) {
 			if (component instanceof JPanel && component.name.equals('tasksGroupPanel')) {
-				return component;
+				return component
 			}
 		}
 	}
 
 	def txt(String key) {
-		return bundle.getString(key);
+		return bundle.getString(key)
 	}
 
 	def freeze() {
-		components.each {component->
+		allComponents.each {component->
 			component.enabled = false
 		}
 	}
 
 	def unFreeze() {
-		components.each {component->
+		allComponents.each {component->
 			component.enabled = true
 		}
 	}

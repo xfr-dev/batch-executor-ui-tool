@@ -6,6 +6,8 @@
 RemoteSystemsTempFiles
 .settings/
 bin/
+.groovy
 
 # SVN
 .svn
+
