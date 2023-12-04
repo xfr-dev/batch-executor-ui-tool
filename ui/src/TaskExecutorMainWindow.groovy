@@ -11,8 +11,6 @@ import javax.swing.JPanel
 import javax.swing.SwingUtilities
 import javax.swing.WindowConstants
 import javax.swing.border.TitledBorder
-import javax.swing.event.HyperlinkEvent
-import javax.swing.event.HyperlinkListener
 
 import groovy.swing.SwingBuilder
 
@@ -92,7 +90,7 @@ class TaskExecutorMainWindow {
 
 					task = new Task(name: value.get("name"), commandLine: value.get("commandLine"),
 					outputCharset: value.get("outputCharset") ? value.get("outputCharset") : Charset.defaultCharset().name(),
-					promptArg: value.get("promptArg"),
+					promptArg: value.get("promptArg"), passwordPromptArg: value.get("passwordPromptArg"),
 					repeatCount:  value.get("repeatCount") ? value.get("repeatCount") : 1,
 					repeatInterval: value.get("repeatInterval") ? value.get("repeatInterval") : 5000,
 					url: value.get("url"),
@@ -190,15 +188,14 @@ class TaskExecutorMainWindow {
 
 												checkboxes.add( checkBox(text: task.name, selected: bind(target:task, targetProperty: 'selected')) )
 											} else if (task.display == Display.LINK) {
-												
+
 												def link = label(text: task.name, foreground: Color.BLUE.darker(), cursor: Cursor.getPredefinedCursor(Cursor.HAND_CURSOR),
 												mouseClicked: {
 													java.awt.Desktop.getDesktop().browse(task.url.toURI())
 												}
 												)
-												
-												allComponents.add(link)
 
+												allComponents.add(link)
 											} else if (task.display == Display.BUTTON) {
 
 												def button = button(text: task.name, actionPerformed: { e ->

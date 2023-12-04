@@ -1,8 +1,12 @@
-import groovy.swing.SwingBuilder
-
 import javax.swing.BoxLayout
+import javax.swing.JLabel
+import javax.swing.JOptionPane
+import javax.swing.JPanel
+import javax.swing.JPasswordField
 import javax.swing.WindowConstants
 import javax.swing.text.DefaultCaret
+
+import groovy.swing.SwingBuilder
 
 
 
@@ -33,8 +37,8 @@ class TasksExecutionWindow {
 				boxLayout(axis:BoxLayout.Y_AXIS)
 				scrollPane() {
 					outputTextArea = textArea(rows: 20, columns: 120, editable: false)
-					DefaultCaret caret = (DefaultCaret) outputTextArea.getCaret();
-					caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+					DefaultCaret caret = (DefaultCaret) outputTextArea.getCaret()
+					caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE)
 				}
 				progressBar = progressBar(minimum:0, maximum: tasks.size(), value: 0, stringPainted: true)
 			}
@@ -70,9 +74,29 @@ class TasksExecutionWindow {
 		def arg
 
 		if (task.promptArg) {
-			def readln = javax.swing.JOptionPane.&showInputDialog
-			arg = readln task.promptArg
+			def dialog = javax.swing.JOptionPane.&showInputDialog
+			arg = dialog task.promptArg
 			//println "Arg is : [${arg}]"
+		} else if (task.passwordPromptArg) {
+			def panel = new JPanel()
+			def label = new JLabel(task.passwordPromptArg)
+			def passwordField = new JPasswordField(20)
+			panel.add(label)
+			panel.add(passwordField)
+
+			def pane = new JOptionPane(panel, JOptionPane.QUESTION_MESSAGE, JOptionPane.OK_CANCEL_OPTION) {
+						@Override
+						public void selectInitialValue() {
+							passwordField.requestFocusInWindow()
+						}
+					}
+
+			pane.createDialog(null, parent.txt('tasks.passwordPromptArg.title')).setVisible(true)
+
+			if (passwordField.getPassword()) {
+				println "User has entered a password"
+				arg = new String(passwordField.getPassword())
+			}
 		}
 
 		if (parent.SIMULATION_MODE) {
@@ -81,24 +105,21 @@ class TasksExecutionWindow {
 			appendOutput(lf)
 			appendOutput("Program set in simulation mode, faked task ${task} execution")
 			appendOutput(lf)
-			
 		} else {
-			
+
 			println "Executing task : [${task}]"
-			
+
 			if (task.commandLine) {
-				
+
 				def commandLine = arg ? task.commandLine.replaceAll("%1", arg): task.commandLine
 				println "Executing command line : [${commandLine}]"
 				executeCommandLine(commandLine, task)
-				
 			} else if (task.url) {
-				
+
 				println "Browsing url : [${task.url}]"
-				java.awt.Desktop.getDesktop().browse(task.url.toURI());
-				
+				java.awt.Desktop.getDesktop().browse(task.url.toURI())
 			} else {
-				
+
 				println "Task  [${task}] has no command line nor url -> there is nothing to do"
 			}
 		}
@@ -119,7 +140,7 @@ class TasksExecutionWindow {
 				}
 
 		try {
-			output = new BufferedOutputStream(output, 100);
+			output = new BufferedOutputStream(output, 100)
 			process.consumeProcessOutput(output, output)
 
 			def resultCode = process.waitFor()
@@ -150,7 +171,7 @@ class TasksExecutionWindow {
 		def result = ""
 
 		for(int i = 0 ; i < length ; i++) {
-			result += '-';
+			result += '-'
 		}
 
 		return result
