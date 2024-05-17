@@ -187,19 +187,29 @@ class TaskExecutorMainWindow {
 											if (task.display == Display.CHECKBOX) {
 
 												checkboxes.add( checkBox(text: task.name, selected: bind(target:task, targetProperty: 'selected')) )
-											} else if (task.display == Display.LINK) {
+											} else if (task.display == Display.LINK || task.display == Display.CHECKBOX_LINK) {
+
+												if ( task.display == Display.CHECKBOX_LINK) {
+													checkboxes.add( checkBox(selected: bind(target:task, targetProperty: 'selected')) )
+												}
 
 												def link = label(text: task.name, foreground: Color.BLUE.darker(), cursor: Cursor.getPredefinedCursor(Cursor.HAND_CURSOR),
 												mouseClicked: {
-													java.awt.Desktop.getDesktop().browse(task.url.toURI())
+													java.awt.Desktop.
+
+															getDesktop().browse(task.url.toURI())
 												}
 												)
 
 												allComponents.add(link)
-											} else if (task.display == Display.BUTTON) {
+											} else if (task.display == Display.BUTTON || task.display == Display.CHECKBOX_BUTTON) {
+
+												if ( task.display == Display.CHECKBOX_BUTTON) {
+													checkboxes.add( checkBox(selected: bind(target:task, targetProperty: 'selected')) )
+												}
 
 												def button = button(text: task.name, actionPerformed: { e ->
-													TasksExecutionWindow execution = new TasksExecutionWindow(this,List.of(task))
+													TasksExecutionWindow execution = new TasksExecutionWindow(this,[task])
 													execution.show()
 													execution.executeTasks()
 												})

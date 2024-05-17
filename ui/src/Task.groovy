@@ -23,6 +23,6 @@ public class Task {
 	}
 
 	public static enum Display {
-		CHECKBOX, LINK, BUTTON
+		CHECKBOX, LINK, BUTTON, CHECKBOX_LINK, CHECKBOX_BUTTON
 	}
 }
