@@ -58,5 +58,19 @@ groups{
 			display = 'BUTTON'
 		}
 	}
+
+	group5 {
+		name = 'Group #5 - Urls with checkboxes'
+		url1 {
+			name='Url (link)'
+			url = 'https://www.atlassian.com'
+			display = 'CHECKBOX_LINK'
+		}
+		url2 {
+			name='Url (Button)'
+			url = 'https://thecodinglove.com/'
+			display = 'CHECKBOX_BUTTON'
+		}
+	}
 }
 
