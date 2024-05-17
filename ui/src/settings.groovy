@@ -3,14 +3,15 @@ groups{
 	group1 {
 		name = 'Group #1'
 		task1 {
-			name='Task #1'
+			name='Task #1 (with arg)'
 			commandLine = 'cmd /C ECHO Hello World héhé 11 %1'
 			outputCharset = 'cp850'
 			promptArg = "Enter arg please:"
 		}
 		task2 {
-			name='Task #2'
-			commandLine = 'cmd /C ECHO Hello World 12'
+			name='Task #2 (with password)'
+			commandLine = 'cmd /C ECHO Hello World 12 %1'
+			passwordPromptArg = "Enter password please:"
 		}
 	}
 	group2 {

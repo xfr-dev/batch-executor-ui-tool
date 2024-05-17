@@ -8,10 +8,11 @@ public class Task {
 	def commandLine
 	def outputCharset
 	def promptArg
+	def passwordPromptArg
 
 	def repeatCount
 	def repeatInterval
-	
+
 	def url
 	def display = Display.CHECKBOX
 
@@ -20,6 +21,8 @@ public class Task {
 	String toString() {
 		return name
 	}
-	
-	public static enum Display { CHECKBOX, LINK, BUTTON }
+
+	public static enum Display {
+		CHECKBOX, LINK, BUTTON
+	}
 }
