@@ -57,6 +57,18 @@ class TaskExecutorMainWindow {
 				fillGroups(tabConfigValue.groups, null, null, 0, tab)
 			}
 		}
+
+		if (config.bundle) {
+
+			if (!config.bundle.exists()) {
+				throw new ConfigurationException("Bundle file not found : $config.bundle")
+			}
+
+			def loader = new URLClassLoader(config.bundle.toPath().getParent().toUri().toURL())
+			def customBundle = java.util.ResourceBundle.getBundle("applicationMessages", Locale.getDefault(), loader)
+			customBundle.setParent(bundle)
+			bundle = customBundle
+		}
 	}
 
 	def printTab(tab) {
