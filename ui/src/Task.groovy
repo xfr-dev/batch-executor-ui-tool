@@ -10,6 +10,9 @@ public class Task {
 	def promptArg
 	def passwordPromptArg
 
+	def promptArgValue
+	def passwordPromptArgValue
+
 	def repeatCount
 	def repeatInterval
 
