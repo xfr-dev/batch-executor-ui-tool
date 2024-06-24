@@ -17,7 +17,7 @@ public class Task {
 	def repeatInterval
 
 	def url
-	def display = Display.CHECKBOX
+	def display
 
 	def selected = false
 

@@ -1,5 +1,7 @@
+import Task.Display
 
 bundle = new File("../test/applicationMessages.properties")
+task.defaultDisplay = Display.CHECKBOX_BUTTON
 
 groups{
 	group1 {
