@@ -72,12 +72,23 @@ class TasksExecutionWindow {
 		taskStarted(task)
 
 		def arg
+		def secret = false
 
-		if (task.promptArg) {
+		if (task.promptArgValue) {
+
+			arg = task.promptArgValue
+		} else if (task.passwordPromptArgValue) {
+
+			arg = task.passwordPromptArgValue
+			secret = true
+		} else if (task.promptArg) {
+
 			def dialog = javax.swing.JOptionPane.&showInputDialog
 			arg = dialog task.promptArg
+			task.promptArgValue = arg
 			//println "Arg is : [${arg}]"
 		} else if (task.passwordPromptArg) {
+
 			def panel = new JPanel()
 			def label = new JLabel(task.passwordPromptArg)
 			def passwordField = new JPasswordField(20)
@@ -96,7 +107,10 @@ class TasksExecutionWindow {
 			if (passwordField.getPassword()) {
 				println "User has entered a password"
 				arg = new String(passwordField.getPassword())
+				task.passwordPromptArgValue = arg
 			}
+
+			secret = true
 		}
 
 		if (parent.SIMULATION_MODE) {
@@ -111,8 +125,9 @@ class TasksExecutionWindow {
 
 			if (task.commandLine) {
 
-				def commandLine = arg ? task.commandLine.replaceAll("%1", arg): task.commandLine
-				println "Executing command line : [${commandLine}]"
+				def commandLine = arg ? task.commandLine.replace("%1", arg): task.commandLine
+				def debug = secret ? commandLine.replace(arg,"*****") : commandLine
+				println "Executing command line : [$debug]"
 				executeCommandLine(commandLine, task)
 			} else if (task.url) {
 

@@ -41,6 +41,21 @@ groups{
 			name='Task #1 - Repeatable'
 			commandLine = 'cmd /C ECHO Hello World @ %date% %time%'
 			repeatCount = 5
+			repeatInterval = 1000
+		}
+		task2 {
+			name='Task #2 - Repeatable with prompt'
+			commandLine = 'cmd /C ECHO Hello World @ %date% %time% %1'
+			repeatCount = 5
+			promptArg = "Enter arg please:"
+			repeatInterval = 1000
+		}
+		task3 {
+			name='Task #3 - Repeatable with password prompt'
+			commandLine = 'cmd /C ECHO Hello World @ %date% %time% %1'
+			repeatCount = 5
+			passwordPromptArg = "Enter password please:"
+			repeatInterval = 1000
 		}
 	}
 	group4 {
