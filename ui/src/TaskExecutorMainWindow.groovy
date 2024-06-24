@@ -86,6 +86,8 @@ class TaskExecutorMainWindow {
 
 	def fillGroups( map, group = null, task = null, level = 0, tab = null ) {
 
+		def defaultDisplay = config.task.defaultDisplay ?: Display.CHECKBOX
+
 		map.each { key, value ->
 
 			if( value instanceof Map ) {
@@ -106,7 +108,7 @@ class TaskExecutorMainWindow {
 					repeatCount:  value.get("repeatCount") ? value.get("repeatCount") : 1,
 					repeatInterval: value.get("repeatInterval") ? value.get("repeatInterval") : 5000,
 					url: value.get("url"),
-					display: value.get("display") ? Display.valueOf(value.get("display")) : Display.CHECKBOX)
+					display: value.get("display") ? Display.valueOf(value.get("display")) : defaultDisplay)
 
 					group.tasks.add(task)
 				}
@@ -221,9 +223,16 @@ class TaskExecutorMainWindow {
 												}
 
 												def button = button(text: task.name, actionPerformed: { e ->
-													TasksExecutionWindow execution = new TasksExecutionWindow(this,[task])
-													execution.show()
-													execution.executeTasks()
+													doOutside {
+														freeze()
+														try {
+															TasksExecutionWindow execution = new TasksExecutionWindow(this,[task])
+															execution.show()
+															execution.executeTasks()
+														} finally {
+															unFreeze()
+														}
+													}
 												})
 
 												allComponents.add(button)
