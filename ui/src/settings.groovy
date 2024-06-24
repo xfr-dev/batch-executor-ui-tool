@@ -1,4 +1,6 @@
 
+bundle = new File("../test/applicationMessages.properties")
+
 groups{
 	group1 {
 		name = 'Group #1'
