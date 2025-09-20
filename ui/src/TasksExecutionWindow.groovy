@@ -45,6 +45,10 @@ class TasksExecutionWindow {
 		}
 	}
 
+    def close() {
+        frame.dispose()
+    }
+
 	def executeTasks() {
 
 		tasks.each {task->

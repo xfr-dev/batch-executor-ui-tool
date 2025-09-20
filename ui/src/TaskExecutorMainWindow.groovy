@@ -1,3 +1,5 @@
+import java.util.prefs.Preferences
+
 import static Task.Display
 
 import java.awt.Color
@@ -35,6 +37,8 @@ class TaskExecutorMainWindow {
 
 	def allComponents = new ArrayList<>()
 
+    Options options = new Options()
+
 	def TaskExecutorMainWindow(config) {
 
 		this.config = config
@@ -61,7 +65,7 @@ class TaskExecutorMainWindow {
 		if (config.bundle) {
 
 			if (!config.bundle.exists()) {
-				throw new ConfigurationException("Bundle file not found : $config.bundle")
+				throw new ConfigurationException("Bundle.groovy file not found : $config.bundle")
 			}
 
 			def loader = new URLClassLoader(config.bundle.toPath().getParent().toUri().toURL())
@@ -121,6 +125,11 @@ class TaskExecutorMainWindow {
 
 	def show() {
 
+        println("Loading user inputs from preferences")
+        Preferences prefs = Preferences.userNodeForPackage(getClass())
+        options.autoCloseOutputWindow = prefs.getBoolean("options.autoCloseOutputWindow", true)
+        println "Options are : [$options]"
+
 		new SwingBuilder().edt {
 
 			frame(title:txt('application.title'), size: [800, 600], show:true, defaultCloseOperation:WindowConstants.EXIT_ON_CLOSE, locationRelativeTo: null) {
@@ -134,7 +143,13 @@ class TaskExecutorMainWindow {
 					}
 				}
 
-				boxLayout(axis: BoxLayout.PAGE_AXIS)
+                // Global options
+                panel() {
+                    checkBox(id = "autoCloseOutputWindow", text: txt('global.options.autoCloseOutputWindow'),  selected: bind('autoCloseOutputWindow', source: options, mutual: true))
+                }
+
+                boxLayout(axis: BoxLayout.PAGE_AXIS)
+
 				// Tabs
 				tabbedPane = tabbedPane(id: 'tabs') {
 					//				tabbedPane(id: 'tabs', tabLayoutPolicy:JTabbedPane.SCROLL_TAB_LAYOUT) {
@@ -225,11 +240,14 @@ class TaskExecutorMainWindow {
 												def button = button(text: task.name, actionPerformed: { e ->
 													doOutside {
 														freeze()
+                                                        TasksExecutionWindow execution = new TasksExecutionWindow(this,[task])
 														try {
-															TasksExecutionWindow execution = new TasksExecutionWindow(this,[task])
-															execution.show()
+                                                            execution.show()
 															execution.executeTasks()
 														} finally {
+                                                            if (options.autoCloseOutputWindow) {
+                                                                execution.close()
+                                                            }
 															unFreeze()
 														}
 													}
@@ -258,7 +276,14 @@ class TaskExecutorMainWindow {
 						}))
 					}
 				}
-			}
+
+                // User preferences saving
+                addShutdownHook {
+                    println("Saving user inputs in preferences")
+                    println("Options are : [$options]")
+                    prefs.put("options.autoCloseOutputWindow", String.valueOf( options.autoCloseOutputWindow))
+                }
+            }
 
 			tabbedPane.addChangeListener({e ->
 
@@ -290,14 +315,19 @@ class TaskExecutorMainWindow {
 		println "Executing selected tasks : [${selectedTasks}]"
 		freeze()
 		TasksExecutionWindow executionWindow = new TasksExecutionWindow(this, selectedTasks)
+        boolean error = false
 		try {
-			executionWindow.show()
+            executionWindow.show()
 			executionWindow.executeTasks()
 		} catch(Throwable e) {
+            error = true
 			e.printStackTrace()
 			JOptionPane.showMessageDialog(executionWindow.frame, "Unexpected error occured while executing selected task : ${e.message}",
 					txt("tasks.execution.error.title"), JOptionPane.ERROR_MESSAGE)
 		} finally {
+            if (!error && options.autoCloseOutputWindow) {
+                executionWindow.close()
+            }
 			unFreeze()
 		}
 	}
