@@ -11,3 +11,4 @@ bin/
 # SVN
 .svn
 
+/.idea

@@ -13,6 +13,6 @@ println "Current directory is : ${FileSystems.getDefault().getPath("").toAbsolut
 println "Launching batch task executor main window using configuration file : [${configPath}]"
 def config = new ConfigSlurper().parse(new File(configPath).toURL())
 URL bundle = TaskExecutorMainWindow.class.getResource("/applicationMessages.properties")
-println "Bundle is : [${bundle}]"
+println "Bundle.groovy is : [${bundle}]"
 TaskExecutorMainWindow window = new TaskExecutorMainWindow(config)
 window.show()
